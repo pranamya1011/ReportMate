@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Report Status</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='checkreport.css') }}" />
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #f0f0f0;
+        }
+        h2, p {
+            margin: 0.5em 0;
+            text-align: center;
+        }
+        #reportStatus {
+            margin-top: 1.5em;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div> 
+    <form>
+    <h2>Thank you for reporting!</h2>
+    <p>Immediate action will be taken.</p>
+    <div>
+        <h3>Your Report Status:</h3>
+        <p id="reportStatus">Loading status...</p>
+    </div>
+
+    <script>
+        // Function to get query parameter by name
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        const reportId = getQueryParam('reportId');
+        const reportStatusElem = document.getElementById('reportStatus');
+
+        if (!reportId) {
+            reportStatusElem.textContent = 'No report ID provided.';
+        } else {
+            async function fetchReportStatus() {
+                try {
+                    const response = await fetch(`http://localhost:5000/report/${reportId}`);
+                    if (response.ok) {
+                        const report = await response.json();
+                        reportStatusElem.textContent = report.status || 'pending';
+                    } else {
+                        reportStatusElem.textContent = 'Failed to fetch report status.';
+                    }
+                } catch (error) {
+                    reportStatusElem.textContent = 'Error connecting to server.';
+                }
+            }
+
+            // Fetch status immediately and then every 10 seconds
+            fetchReportStatus();
+            setInterval(fetchReportStatus, 10000);
+        }
+    </script>
+    </form>
+</div>
+</body>
+</html>

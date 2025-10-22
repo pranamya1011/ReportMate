@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home Page</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}" />
+</head>
+<body>
+  <header>
+    <h2>Welcome to ReportMate</h2>
+    <nav>
+      <ul>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/report">Report an Issue</a></li>
+        <li><a href="/checkreport">Check Report Status</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <p>Your one-step solution to report and track issues in your surroundings.</p>
+  </main>
+</body>
+</html>

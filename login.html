@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+</head>
+<body>
+  <div>
+    <div id="auth-section">
+    <h2 id="authMessage">Welcome! Please choose an option:</h2>
+    <p id="authSubMessage">If you already have an account, please log in. Otherwise, register below.</p>
+    <button id="registerBtn" onclick="showRegister(); return false;">Register</button>
+    <button id="loginBtn" onclick="showLogin(); return false;">Login</button>
+    <form id="registerForm" style="display:none;">
+        <input type="text" id="registerUsername" name="registerUsername" placeholder="Username" required autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+        <input type="email" id="registerEmail" name="registerEmail" placeholder="Email" required autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+        <input type="password" id="registerPassword" name="registerPassword" placeholder="Password" required autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+        <button type="button" onclick="register()">Register</button>
+    </form>
+    <form id="loginForm" style="display:none;">
+        <input type="text" id="loginUsername" name="loginUsername" placeholder="Username" required autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+        <input type="password" id="loginPassword" name="loginPassword" placeholder="Password" required autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+        <button type="button" onclick="login()">Login</button>
+    </form>
+    <div id="loginMessage" style="display:none; color: #4CAF50; font-weight: bold; margin-top: 20px;"></div>
+  </div>
+</div>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script>
+    // After successful login or registration, redirect to report page with message
+    function onLoginSuccess() {
+      const loginMessage = document.getElementById('loginMessage');
+      loginMessage.textContent = 'Logged in successfully. Redirecting...';
+      loginMessage.style.display = 'block';
+      setTimeout(() => {
+        window.location.href = "/report";
+      }, 5000);
+    }
+    // Show register form and hide login form, hide buttons, update message
+    function showRegister() {
+      document.getElementById('registerForm').style.display = 'block';
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('registerBtn').style.display = 'none';
+      document.getElementById('loginBtn').style.display = 'none';
+      document.getElementById('authMessage').textContent = 'Please enter the below credentials';
+      document.getElementById('authSubMessage').textContent = '';
+    }
+    // Show login form and hide register form, hide buttons, update message
+    function showLogin() {
+      document.getElementById('loginForm').style.display = 'block';
+      document.getElementById('registerForm').style.display = 'none';
+      document.getElementById('registerBtn').style.display = 'none';
+      document.getElementById('loginBtn').style.display = 'none';
+      document.getElementById('authMessage').textContent = 'Please enter the below credentials';
+      document.getElementById('authSubMessage').textContent = '';
+    }
+  </script>
+</body>
+</html>

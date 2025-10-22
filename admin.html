@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin - Manage Reports</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}" />
+</head>
+<body>
+    <h2>Admin Panel - Manage Reports</h2>
+    <table id="reportsTable" border="1" cellpadding="5" cellspacing="0">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Issue Type</th>
+                <th>Description</th>
+                <th>Image</th>
+                <th>Timestamp</th>
+                <th>Status</th>
+                <th>Assigned Worker</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Reports will be populated here -->
+        </tbody>
+    </table>
+
+    <script>
+    async function fetchReports() {
+    try {
+        const response = await fetch('http://localhost:5000/admin/reports');
+        if (response.ok) {
+            const reports = await response.json();
+            const tbody = document.querySelector('#reportsTable tbody');
+            tbody.innerHTML = '';
+            reports.forEach(report => {
+                const tr = document.createElement('tr');
+
+                const imageCell = report.image_path ? `<a href="${report.image_path}" target="_blank">View Image</a>` : 'No Image';
+
+                // Placeholder for assigned worker name or assignment UI
+                let assignedWorkerCell = '';
+                if (report.assigned_worker) {
+                    assignedWorkerCell = report.assigned_worker.name;
+                } else {
+                    assignedWorkerCell = `<select id="assignWorkerSelect_${report.id}" name="assignWorkerSelect_${report.id}"><option value="">Select Worker</option></select>
+                    <button onclick="assignWorker(${report.id})">Assign</button>`;
+                }
+                
+                // Disable actions if worker assigned
+                let actionsCellContent = '';
+                if (report.status === 'approved') {
+                    actionsCellContent = '&#10004;';
+                } else if (report.status === 'declined') {
+                    actionsCellContent = '&#10008;';
+                } else if (report.assigned_worker) {
+                    actionsCellContent = 'Worker Assigned';
+                } else {
+                    actionsCellContent = `<button onclick="updateReportStatus(${report.id}, 'approve', this)">Approve</button>
+                                         <button onclick="updateReportStatus(${report.id}, 'decline', this)">Decline</button>`;
+                }
+
+                tr.innerHTML = `
+                    <td>${report.id}</td>
+                    <td>${report.issue_type}</td>
+                    <td>${report.description}</td>
+                    <td>${imageCell}</td>
+                    <td>${new Date(report.timestamp).toLocaleString()}</td>
+                    <td>${report.status}</td>
+                    <td>${assignedWorkerCell}</td>
+                    <td>${actionsCellContent}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            alert('Failed to fetch reports');
+        }
+    } catch (error) {
+        alert('Error connecting to server');
+        console.error(error);
+    }
+}
+
+async function updateReportStatus(reportId, status, buttonElement) {
+    if (status !== 'approve' && status !== 'decline') {
+        alert('Invalid status value');
+        return;
+    }
+    try {
+        const response = await fetch(`http://localhost:5000/admin/reports/${reportId}/${status}`, {
+            method: 'POST'
+        });
+        if (response.ok) {
+            alert(`Report ${status} successfully`);
+            // Update UI: hide buttons and show mark
+            const actionsCell = buttonElement.parentElement;
+            actionsCell.innerHTML = status === 'approve' ? '&#10004;' : '&#10008;'; // ✓ or ✗
+        } else {
+            alert('Failed to update report status');
+        }
+    } catch (error) {
+        alert('Error connecting to server');
+        console.error(error);
+    }
+}
+
+async function fetchWorkersForAssignment(reportId, location) {
+    try {
+        let url = 'http://localhost:5000/workers';
+        if (location) {
+            url += '?location=' + encodeURIComponent(location);
+        }
+        const response = await fetch(url);
+        if (response.ok) {
+            const workers = await response.json();
+            const select = document.getElementById(`assignWorkerSelect_${reportId}`);
+            if (select) {
+                workers.forEach(worker => {
+                    const option = document.createElement('option');
+                    option.value = worker.id;
+                    option.textContent = worker.name;
+                    select.appendChild(option);
+                });
+            }
+        } else {
+            alert('Failed to fetch workers for assignment');
+        }
+    } catch (error) {
+        alert('Error connecting to server');
+        console.error(error);
+    }
+}
+
+async function assignWorker(reportId) {
+    const select = document.getElementById(`assignWorkerSelect_${reportId}`);
+    if (!select) return;
+    const workerId = select.value;
+    if (!workerId) {
+        alert('Please select a worker to assign');
+        return;
+    }
+    try {
+        const response = await fetch(`http://localhost:5000/admin/reports/${reportId}/assign_worker`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ worker_id: workerId })
+        });
+        if (response.ok) {
+            alert('Worker assigned successfully');
+            // Hide the dropdown and assign button, show only the worker's name
+            const selectElement = document.getElementById(`assignWorkerSelect_${reportId}`);
+            if (selectElement) {
+                const assignedWorkerName = selectElement.options[selectElement.selectedIndex].text;
+                const assignedWorkerCell = selectElement.parentElement;
+                assignedWorkerCell.innerHTML = assignedWorkerName;
+            }
+        } else {
+            alert('Failed to assign worker');
+        }
+    } catch (error) {
+        alert('Error connecting to server');
+        console.error(error);
+    }
+}
+
+// Modified fetchReports to fetch workers for assignment after populating rows
+async function fetchReports() {
+    try {
+        const response = await fetch('http://localhost:5000/admin/reports');
+        if (response.ok) {
+            const reports = await response.json();
+            const tbody = document.querySelector('#reportsTable tbody');
+            tbody.innerHTML = '';
+            reports.forEach(report => {
+                const tr = document.createElement('tr');
+
+                const imageCell = report.image_path ? `<a href="${report.image_path}" target="_blank">View Image</a>` : 'No Image';
+
+                // Placeholder for assigned worker name or assignment UI
+                let assignedWorkerCell = '';
+                if (report.assigned_worker) {
+                    assignedWorkerCell = report.assigned_worker.name;
+                } else {
+                    assignedWorkerCell = `<select id="assignWorkerSelect_${report.id}"><option value="">Select Worker</option></select>
+                    <button onclick="assignWorker(${report.id})">Assign</button>`;
+                }
+
+                // Disable actions if worker assigned
+                let actionsCellContent = '';
+                if (report.status === 'approved') {
+                    actionsCellContent = '&#10004;';
+                } else if (report.status === 'declined') {
+                    actionsCellContent = '&#10008;';
+                } else if (report.assigned_worker) {
+                    actionsCellContent = 'Worker Assigned';
+                } else {
+                    actionsCellContent = `<button onclick="updateReportStatus(${report.id}, 'approve', this)">Approve</button>
+                                         <button onclick="updateReportStatus(${report.id}, 'decline', this)">Decline</button>`;
+                }
+
+                tr.innerHTML = `
+                    <td>${report.id}</td>
+                    <td>${report.issue_type}</td>
+                    <td>${report.description}</td>
+                    <td>${imageCell}</td>
+                    <td>${new Date(report.timestamp).toLocaleString()}</td>
+                    <td>${report.status}</td>
+                    <td>${assignedWorkerCell}</td>
+                    <td>${actionsCellContent}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Fetch workers for assignment for reports without assigned worker
+            reports.forEach(report => {
+                if (!report.assigned_worker) {
+                    fetchWorkersForAssignment(report.id, report.location);
+                }
+            });
+        } else {
+            alert('Failed to fetch reports');
+        }
+    } catch (error) {
+        alert('Error connecting to server');
+        console.error(error);
+    }
+}
+
+window.onload = fetchReports;
+
+
+    </script>
+</body>
+</html>
